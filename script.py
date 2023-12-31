@@ -55,6 +55,30 @@ def move_to_not_translated_folder(folder_path, file_name):
     not_translated_folder.mkdir(exist_ok=True)
     os.rename(Path(folder_path) / file_name, not_translated_folder / file_name)
 
+def google_translate_text(google_api_key, text, target_lang):
+    url = "https://translation.googleapis.com/language/translate/v2"
+    payload = {
+        'key': google_api_key,
+        'q': text,
+        'target': target_lang
+    }
+    response = requests.post(url, json=payload)
+    if response.status_code == 200 and 'data' in response.json():
+        return response.json()['data']['translations'][0]['translatedText']
+    else:
+        return None
+
+def fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages):
+    for lang in not_translated_languages:
+        translated_content = {}
+        for key, value in template_content.items():
+            translation = google_translate_text(google_api_key, value, lang)
+            if translation is not None:
+                translated_content[key] = translation
+        if translated_content:
+            with open(os.path.join(i18n_folder_path, f'{lang}.json'), 'w', encoding='utf-8') as f:
+                json.dump(translated_content, f, ensure_ascii=False, indent=4)
+
 def confirm_translation():
     i18n_folder_path = folder_path.get()
     template_lang_code = template_lang.get().upper()
@@ -74,22 +98,31 @@ def confirm_translation():
         return
 
     target_languages = [file.split('.')[0] for file in os.listdir(i18n_folder_path) if file.endswith('.json') and file != f'{template_lang_code}.json']
-    for lang in target_languages:
+    not_translated_languages = []
+    for lang in target_languages.copy():
         if not check_language_support(deepl_api_key, lang):
-            move_to_not_translated_folder(i18n_folder_path, f'{lang}.json')
+            not_translated_languages.append(lang)
             target_languages.remove(lang)
 
     total_chars = count_characters(template_content) * len(target_languages)
-
     if messagebox.askyesno("Confirm Translation", f"You are about to translate {total_chars} characters for the following language codes: {', '.join(target_languages)}. Do you want to proceed?"):
-        start_translation(i18n_folder_path, template_lang_code, deepl_api_key, template_content, target_languages)
+        start_translation(i18n_folder_path, template_lang_code, deepl_api_key, template_content, target_languages, not_translated_languages)
 
-def start_translation(i18n_folder_path, template_lang_code, deepl_api_key, template_content, target_languages):
+def start_translation(i18n_folder_path, template_lang_code, deepl_api_key, template_content, target_languages, not_translated_languages):
     for target_lang_code in target_languages:
         translated_content = translate_and_populate(template_content, target_lang_code, deepl_api_key)
         if translated_content:
             with open(os.path.join(i18n_folder_path, f'{target_lang_code}.json'), 'w', encoding='utf-8') as f:
                 json.dump(translated_content, f, ensure_ascii=False, indent=4)
+        else:
+            not_translated_languages.append(target_lang_code)
+
+    if not_translated_languages:
+        messagebox.showinfo("Partial Completion", f"Initial translation is complete, but following languages failed: {', '.join(not_translated_languages)}. Enter your Google Translate API key as a fallback option.")
+        google_api_key = simpledialog.askstring("Google API Key", "Enter Google Translate API Key:")
+        if google_api_key:
+            fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages)
+
     messagebox.showinfo("Translation Completed", "The translation process is completed.")
 
 # Set up the GUI
