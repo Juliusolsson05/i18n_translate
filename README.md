@@ -19,7 +19,7 @@
 To get started with `i18n_translate_tool`, clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/your-github-username/i18n_translate_tool.git
+git clone https://github.com/Juliusolsson05/i18n_translate_tool.git
 ```
 
 ## Dependencies
