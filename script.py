@@ -23,26 +23,32 @@ def check_language_support(deepl_api_key, target_lang):
         messagebox.showerror("API Error", "Error checking supported languages with DeepL API.")
         return False
 
-def translate_text(deepl_api_key, text, target_lang):
-    url = "https://api-free.deepl.com/v2/translate"
-    payload = {
-        'auth_key': deepl_api_key,
-        'text': text,
-        'target_lang': target_lang.upper()
-    }
-    response = requests.post(url, data=payload)
-    if 'translations' in response.json():
-        return response.json()['translations'][0]['text']
+def translate_text(deepl_api_key, google_api_key, text, target_lang):
+    if len(text.split()) < 4:
+        print("test")
+        print(text)
+        return google_translate_text(google_api_key, text, target_lang)
     else:
-        return None
+        url = "https://api-free.deepl.com/v2/translate"
+        payload = {
+            'auth_key': deepl_api_key,
+            'text': text,
+            'target_lang': target_lang.upper()
+        }
+        response = requests.post(url, data=payload)
+        if 'translations' in response.json():
+            return response.json()['translations'][0]['text']
+        else:
+            return None
 
 def count_characters(json_content):
     return sum(len(value) for value in json_content.values())
 
-def translate_and_populate(template_content, target_lang, deepl_api_key):
+def translate_and_populate(template_content, target_lang, deepl_api_key, google_api_key):
     translated_content = {}
     for key, value in template_content.items():
-        translation = translate_text(deepl_api_key, value, target_lang)
+        # Updated to pass google_api_key
+        translation = translate_text(deepl_api_key, google_api_key, value, target_lang)
         if translation is not None:
             translated_content[key] = translation
     return translated_content
@@ -118,9 +124,14 @@ def confirm_translation():
     if template_content is None:
         return
 
-    deepl_api_key = simpledialog.askstring("API Key", "Enter DeepL API Key:")
+    deepl_api_key = simpledialog.askstring("DeepL API Key", "Enter DeepL API Key:")
     if not deepl_api_key:
-        messagebox.showinfo("Cancelled", "Translation cancelled (no API key provided).")
+        messagebox.showinfo("Cancelled", "Translation cancelled (no DeepL API key provided).")
+        return
+
+    google_api_key = simpledialog.askstring("Google API Key", "Enter Google Translate API Key:")
+    if not google_api_key:
+        messagebox.showinfo("Cancelled", "Translation cancelled (no Google Translate API key provided).")
         return
 
     target_languages = [file.split('.')[0] for file in os.listdir(i18n_folder_path) if file.endswith('.json') and file != f'{template_lang_code}.json']
@@ -132,11 +143,13 @@ def confirm_translation():
 
     total_chars = count_characters(template_content) * len(target_languages)
     if messagebox.askyesno("Confirm Translation", f"You are about to translate {total_chars} characters for the following language codes: {', '.join(target_languages)}. Do you want to proceed?"):
-        start_translation(i18n_folder_path, template_lang_code, deepl_api_key, template_content, target_languages, not_translated_languages)
+        # Added google_api_key in the function call
+        start_translation(i18n_folder_path, template_lang_code, deepl_api_key, google_api_key, template_content, target_languages, not_translated_languages)
 
-def start_translation(i18n_folder_path, template_lang_code, deepl_api_key, template_content, target_languages, not_translated_languages):
+def start_translation(i18n_folder_path, template_lang_code, deepl_api_key, google_api_key, template_content, target_languages, not_translated_languages):
     for target_lang_code in target_languages:
-        translated_content = translate_and_populate(template_content, target_lang_code, deepl_api_key)
+        # Updated to pass google_api_key
+        translated_content = translate_and_populate(template_content, target_lang_code, deepl_api_key, google_api_key)
         if translated_content:
             with open(os.path.join(i18n_folder_path, f'{target_lang_code}.json'), 'w', encoding='utf-8') as f:
                 json.dump(translated_content, f, ensure_ascii=False, indent=4)
