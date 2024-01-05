@@ -62,7 +62,9 @@ While this tool currently operates independently, it will soon be part of Nordto
 
 ## TODO
 
-1. ☐  Add so that you can write what key to start from
+1. ☑  Add so that you can write what key to start from
 2. ☑  Add so that DeepL is not used for sentances with less then 4 words, becuase DeepL is bad at straight word translation, use Google Cloud Translate for this instead.
 3. ☑  Add a DeepL clean up mode for the translations that has already been made before the >4 word logic
-3. ☐  Add a CLI mode aswell
+4. ☐  Add a CLI mode aswell
+5. ☐  Write so that you can choose between using the GUI or the CLI 
+6. ☐  Publish the tool on PIP and maybe node?  
