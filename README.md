@@ -1,22 +1,24 @@
 # i18n_translate_tool
 
-`i18n_translate_tool` is a powerful utility designed to streamline the process of translating internationalization (i18n) JSON files. It leverages the DeepL API for accurate translations and falls back on Google Translate for languages not supported by DeepL. This tool is especially useful for developers and content creators working on multilingual applications or websites, ensuring a seamless and efficient translation workflow.
+`i18n_translate_tool` is a sophisticated utility designed to facilitate the translation of internationalization (i18n) JSON files. It leverages both the DeepL and Google Translate APIs for comprehensive and accurate translations. This tool is invaluable for developers and content creators working on multilingual applications or websites, offering an efficient and streamlined translation workflow.
 
 ## Features
 
-- **DeepL Translation**: Utilizes the DeepL API for high-quality translations.
-- **Google Translate Fallback**: Automatically uses Google Translate for languages not supported by DeepL.
-- **Batch Translation**: Enables translation of multiple files at once, saving time and effort.
-- **User-Friendly GUI**: Simple and intuitive graphical user interface for ease of use.
-- **Error Handling**: Robust error handling for smooth operation and troubleshooting.
+- **DeepL and Google Translate Integration**: Uses the DeepL API for high-quality translations and Google Translate as a fallback for languages not supported by DeepL.
+- **Selective Translation Logic**: Employs smart logic to use Google Translate for shorter texts, optimizing translation quality.
+- **Batch Translation Capability**: Allows for the translation of multiple files simultaneously, greatly enhancing productivity.
+- **User-Friendly GUI**: Features a simple and intuitive graphical user interface, making it accessible for users of all skill levels.
+- **Robust Error Handling**: Includes comprehensive error handling to ensure smooth operation and ease troubleshooting.
+- **Character Count Functionality**: Counts the number of characters to be translated, aiding in the management of API usage and limits.
+- **Language Support Check**: Verifies the supported languages for both DeepL and Google Translate, ensuring accurate translations.
 
-## Future Integration
+## Upcoming Integration
 
-`i18n_translate_tool` is set to be merged with Nordtools, further expanding its capabilities and integrating it into a suite of useful tools for developers.
+`i18n_translate_tool` is poised to integrate with Nordtools, significantly broadening its range of features and incorporating it into a more extensive toolkit for developers.
 
 ## Installation
 
-To get started with `i18n_translate_tool`, clone this repository to your local machine:
+Clone this repository to get started with `i18n_translate_tool`:
 
 ```bash
 git clone https://github.com/Juliusolsson05/i18n_translate_tool.git
@@ -26,34 +28,37 @@ git clone https://github.com/Juliusolsson05/i18n_translate_tool.git
 
 - Python 3.x
 - `requests` library for Python
+- `tkinter` for the GUI interface
 
-You can install the required Python package using pip:
+Install the necessary Python packages using pip:
 
 ```bash
 pip install requests
 ```
 
+For `tkinter`, please refer to its [installation guide](https://tkdocs.com/tutorial/install.html), as the installation process can vary depending on your operating system.
+
 ## Usage
 
-1. **Start the Tool**: Run the `i18n_translate_tool` script.
+1. **Launch the Tool**: Execute the `i18n_translate_tool` script.
    ```bash
    python script.py
    ```
-2. **Set API Keys**: Enter your DeepL API key, and if necessary, your Google Translate API key when prompted.
-3. **Select i18n Folder**: Choose the folder containing your i18n JSON files.
-4. **Start Translation**: Click the "Calculate Characters and Translate" button to begin the translation process.
+2. **Input API Keys**: When prompted, enter your DeepL API key and, if necessary, your Google Translate API key.
+3. **Choose i18n Folder**: Select the folder containing your i18n JSON files.
+4. **Initiate Translation**: Click the "Calculate Characters and Translate" button to start the translation.
 
 ## Contributing
 
-Contributions to `i18n_translate_tool` are welcome! Please feel free to submit pull requests or open issues to improve the functionality or address any bugs.
+We encourage contributions to `i18n_translate_tool`! Feel free to submit pull requests or open issues for enhancements or bug fixes.
 
 ## License
 
-This project is licensed under [MIT License](LICENSE).
+This project is under the [MIT License](LICENSE).
 
 ## Note
 
-This tool is currently independent but will be merged with Nordtools in the future to provide a comprehensive toolkit for developers.
+While this tool currently operates independently, it will soon be part of Nordtools, offering a more comprehensive set of tools for developers.
 
 ## TODO
 
