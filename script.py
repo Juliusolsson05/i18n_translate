@@ -56,16 +56,23 @@ def move_to_not_translated_folder(folder_path, file_name):
     os.rename(Path(folder_path) / file_name, not_translated_folder / file_name)
 
 def google_translate_text(google_api_key, text, target_lang):
-    url = "https://translation.googleapis.com/language/translate/v2"
-    payload = {
-        'key': google_api_key,
-        'q': text,
-        'target': target_lang
+    url = f"https://translation.googleapis.com/language/translate/v2?key={google_api_key}"
+
+    headers = {
+        "Content-Type": "application/json"
     }
-    response = requests.post(url, json=payload)
+
+    data = json.dumps({
+        "q": text,
+        "target": target_lang
+    })
+
+    response = requests.post(url, headers=headers, data=data)
+
     if response.status_code == 200 and 'data' in response.json():
         return response.json()['data']['translations'][0]['translatedText']
     else:
+        print("Error:", response.status_code, response.json())
         return None
 
 def fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages):
@@ -81,7 +88,7 @@ def fallback_translation(i18n_folder_path, template_content, google_api_key, not
 
 def confirm_translation():
     i18n_folder_path = folder_path.get()
-    template_lang_code = template_lang.get().upper()
+    template_lang_code = template_lang.get()
 
     template_file_path = os.path.join(i18n_folder_path, f'{template_lang_code}.json')
     if not os.path.isfile(template_file_path):
