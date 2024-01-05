@@ -22,9 +22,9 @@ def check_language_support(deepl_api_key):
         messagebox.showerror("API Error", "Error checking supported languages with DeepL API.")
         return []
 
-def translate_text(deepl_api_key, google_api_key, text, target_lang):
+def translate_text(deepl_api_key, google_api_key, text, target_lang, template_lang_code):
     if len(text.split()) < 4:
-        return google_translate_text(google_api_key, text, target_lang)
+        return google_translate_text(google_api_key, text, target_lang, template_lang_code)
     else:
         url = "https://api-free.deepl.com/v2/translate"
         payload = {
@@ -41,10 +41,10 @@ def translate_text(deepl_api_key, google_api_key, text, target_lang):
 def count_characters(json_content):
     return sum(len(value) for value in json_content.values())
 
-def translate_and_populate(template_content, target_lang, deepl_api_key, google_api_key):
+def translate_and_populate(template_content, target_lang, deepl_api_key, google_api_key, template_lang_code):
     translated_content = {}
     for key, value in template_content.items():
-        translation = translate_text(deepl_api_key, google_api_key, value, target_lang)
+        translation = translate_text(deepl_api_key, google_api_key, value, target_lang, template_lang_code)
         if translation is not None:
             translated_content[key] = translation
     return translated_content
@@ -57,10 +57,14 @@ def move_to_not_translated_folder(folder_path, file_name):
     not_translated_folder.mkdir(exist_ok=True)
     os.rename(Path(folder_path) / file_name, not_translated_folder / file_name)
 
-def google_translate_text(google_api_key, text, target_lang):
+def google_translate_text(google_api_key, text, target_lang, source_lang='auto'):
     url = f"https://translation.googleapis.com/language/translate/v2?key={google_api_key}"
     headers = {"Content-Type": "application/json"}
-    data = json.dumps({"q": text, "target": target_lang})
+    data = json.dumps({
+        "q": text,
+        "target": target_lang,
+        "source": source_lang  # Source language, 'auto' for automatic detection
+    })
     response = requests.post(url, headers=headers, data=data)
     if response.status_code == 200 and 'data' in response.json():
         return response.json()['data']['translations'][0]['translatedText']
@@ -82,7 +86,7 @@ def get_google_supported_languages(google_api_key):
         messagebox.showerror("Network Error", f"Network error when fetching languages: {e}")
         return []
 
-def fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages):
+def fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages, template_lang_code):
     supported_languages = get_google_supported_languages(google_api_key)
     google_translate_languages = [lang for lang in not_translated_languages if lang in supported_languages]
     if not google_translate_languages:
@@ -93,7 +97,7 @@ def fallback_translation(i18n_folder_path, template_content, google_api_key, not
         for lang in google_translate_languages:
             translated_content = {}
             for key, value in template_content.items():
-                translation = google_translate_text(google_api_key, value, lang)
+                translation = google_translate_text(google_api_key, value, lang, template_lang_code)
                 if translation is not None:
                     translated_content[key] = translation
             if translated_content:
@@ -101,6 +105,7 @@ def fallback_translation(i18n_folder_path, template_content, google_api_key, not
                     json.dump(translated_content, f, ensure_ascii=False, indent=4)
 
     messagebox.showinfo("Translation complete!", "The translation was completed.")
+
 def deepL_cleanup_mode():
     i18n_folder_path = folder_path.get()
     template_lang_code = template_lang.get()
@@ -118,18 +123,17 @@ def deepL_cleanup_mode():
         messagebox.showinfo("Cancelled", "DeepL Cleanup Mode cancelled (no DeepL API key provided).")
         return
     deepl_supported_languages = check_language_support(deepl_api_key)
-    print(deepl_supported_languages)
     for lang in os.listdir(i18n_folder_path):
         lang_code = lang.split('.')[0]
-        print(lang_code)
+        if lang == f'{template_lang_code}.json':  # Skip the template file
+            continue
         if lang.endswith('.json') and lang_code.upper() in deepl_supported_languages:
             lang_file_path = os.path.join(i18n_folder_path, lang)
             lang_content = read_json(lang_file_path)
             if lang_content:
                 for key in short_content_keys:
                     if key in lang_content:
-                        print(template_content[key])
-                        lang_content[key] = google_translate_text(google_api_key, template_content[key], lang_code)
+                        lang_content[key] = google_translate_text(google_api_key, template_content[key], lang_code, template_lang_code)
                 with open(lang_file_path, 'w', encoding='utf-8') as f:
                     json.dump(lang_content, f, ensure_ascii=False, indent=4)
 
@@ -174,9 +178,9 @@ def translate_from_key_mode():
             for key in list(template_content.keys())[start_index:]:
                 text = template_content[key]
                 if len(text.split()) < 4 or lang_code.upper() not in deepl_supported_languages:
-                    translated_text = google_translate_text(google_api_key, text, lang_code)
+                    translated_text = google_translate_text(google_api_key, text, lang_code, template_lang_code)
                 else:
-                    translated_text = translate_text(deepl_api_key, google_api_key, text, lang_code)
+                    translated_text = translate_text(deepl_api_key, google_api_key, text, lang_code, template_lang_code)
                 if translated_text:
                     lang_content[key] = translated_text
 
@@ -220,7 +224,7 @@ def confirm_translation():
 
 def start_translation(i18n_folder_path, template_lang_code, deepl_api_key, google_api_key, template_content, target_languages, not_translated_languages):
     for target_lang_code in target_languages:
-        translated_content = translate_and_populate(template_content, target_lang_code, deepl_api_key, google_api_key)
+        translated_content = translate_and_populate(template_content, target_lang_code, deepl_api_key, google_api_key, template_lang_code)
         if translated_content:
             with open(os.path.join(i18n_folder_path, f'{target_lang_code}.json'), 'w', encoding='utf-8') as f:
                 json.dump(translated_content, f, ensure_ascii=False, indent=4)
@@ -230,7 +234,7 @@ def start_translation(i18n_folder_path, template_lang_code, deepl_api_key, googl
         messagebox.showinfo("Partial Completion", "Initial translation is complete. Enter your Google Translate API key for additional languages.")
         google_api_key = simpledialog.askstring("Google API Key", "Enter Google Translate API Key:")
         if google_api_key:
-            fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages)
+            fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages, template_lang_code)
 
 root = Tk()
 root.title("i18n Translator")
