@@ -75,16 +75,35 @@ def google_translate_text(google_api_key, text, target_lang):
         print("Error:", response.status_code, response.json())
         return None
 
+def get_google_supported_languages(google_api_key):
+    url = "https://translation.googleapis.com/language/translate/v2/languages?key={}".format(google_api_key)
+    response = requests.get(url)
+    if response.status_code == 200:
+        languages = response.json().get('data', {}).get('languages', [])
+        return [lang['language'] for lang in languages]
+    else:
+        messagebox.showerror("API Error", "Error fetching supported languages from Google Translate.")
+        return []
+
 def fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages):
-    for lang in not_translated_languages:
-        translated_content = {}
-        for key, value in template_content.items():
-            translation = google_translate_text(google_api_key, value, lang)
-            if translation is not None:
-                translated_content[key] = translation
-        if translated_content:
-            with open(os.path.join(i18n_folder_path, f'{lang}.json'), 'w', encoding='utf-8') as f:
-                json.dump(translated_content, f, ensure_ascii=False, indent=4)
+    supported_languages = get_google_supported_languages(google_api_key)
+    google_translate_languages = [lang for lang in not_translated_languages if lang in supported_languages]
+
+    if not google_translate_languages:
+        messagebox.showinfo("No Translation Needed", "No additional languages require Google Translate.")
+        return
+
+    total_chars = count_characters(template_content) * len(google_translate_languages)
+    if messagebox.askyesno("Confirm Google Translation", f"You are about to translate {total_chars} characters for the following language codes with Google Translate: {', '.join(google_translate_languages)}. Do you want to proceed?"):
+        for lang in google_translate_languages:
+            translated_content = {}
+            for key, value in template_content.items():
+                translation = google_translate_text(google_api_key, value, lang)
+                if translation is not None:
+                    translated_content[key] = translation
+            if translated_content:
+                with open(os.path.join(i18n_folder_path, f'{lang}.json'), 'w', encoding='utf-8') as f:
+                    json.dump(translated_content, f, ensure_ascii=False, indent=4)
 
 def confirm_translation():
     i18n_folder_path = folder_path.get()
@@ -125,14 +144,11 @@ def start_translation(i18n_folder_path, template_lang_code, deepl_api_key, templ
             not_translated_languages.append(target_lang_code)
 
     if not_translated_languages:
-        messagebox.showinfo("Partial Completion", f"Initial translation is complete, but following languages failed: {', '.join(not_translated_languages)}. Enter your Google Translate API key as a fallback option.")
+        messagebox.showinfo("Partial Completion", "Initial translation is complete. Enter your Google Translate API key for additional languages.")
         google_api_key = simpledialog.askstring("Google API Key", "Enter Google Translate API Key:")
         if google_api_key:
             fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages)
 
-    messagebox.showinfo("Translation Completed", "The translation process is completed.")
-
-# Set up the GUI
 root = Tk()
 root.title("i18n Translator")
 
