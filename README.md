@@ -54,3 +54,9 @@ This project is licensed under [MIT License](LICENSE).
 ## Note
 
 This tool is currently independent but will be merged with Nordtools in the future to provide a comprehensive toolkit for developers.
+
+## TODO
+
+1. Add so that you can write what key to start from
+2. Add so that DeepL is not used for sentances with less then 4 words, becuase DeepL is bad at straight word translation, use Google Cloud Translate for this instead.
+
