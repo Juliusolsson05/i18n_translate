@@ -3,5 +3,10 @@
     "bottom_container_home_text": "Både",
     "bottom_container_map_text": "Burk",
     "bottom_container_settings_text": "Inställningar",
-    "pant_instructions_step_1": "Töm och rengör produkten. Test."
+    "pant_instructions_step_1": "Töm och rengör produkten. Test.",
+    "test_key": "Hejsan, mitt namn är Python!",
+    "test_key_2": "Testar denna logiken!",
+    "test_key_3": "Hejsan igen, detta är sjukt otroligt!",
+    "test_key_4": "Varför skulle man inte älska python!",
+    "test_key_5": "Detta är sista testet!"
 }

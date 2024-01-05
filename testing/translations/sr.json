@@ -1,7 +1,12 @@
 {
     "bottom_container_camera_text": "Сцаннер",
     "bottom_container_home_text": "И једно и друго",
-    "bottom_container_map_text": "Бурк",
-    "bottom_container_settings_text": "Подешавања",
-    "pant_instructions_step_1": "Испразните и очистите производ. Тест."
+    "bottom_container_map_text": "",
+    "bottom_container_settings_text": "",
+    "pant_instructions_step_1": "",
+    "test_key": "Здраво, моје име је Питхон!",
+    "test_key_2": "Тестирање ове логике!",
+    "test_key_3": "Здраво још једном, ово је невероватно!",
+    "test_key_4": "Зашто не волите питона!",
+    "test_key_5": "Ово је последњи тест!"
 }

@@ -69,12 +69,17 @@ def google_translate_text(google_api_key, text, target_lang):
 
 def get_google_supported_languages(google_api_key):
     url = f"https://translation.googleapis.com/language/translate/v2/languages?key={google_api_key}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        languages = response.json().get('data', {}).get('languages', [])
-        return [lang['language'] for lang in languages]
-    else:
-        messagebox.showerror("API Error", "Error fetching supported languages from Google Translate.")
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            languages = response.json().get('data', {}).get('languages', [])
+            return [lang['language'] for lang in languages]
+        else:
+            messagebox.showerror("API Error", f"Error fetching supported languages from Google Translate: HTTP {response.status_code}")
+            print("Response Content:", response.text)  # Log the response content for debugging
+            return []
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Network Error", f"Network error when fetching languages: {e}")
         return []
 
 def fallback_translation(i18n_folder_path, template_content, google_api_key, not_translated_languages):
@@ -128,9 +133,63 @@ def deepL_cleanup_mode():
                 with open(lang_file_path, 'w', encoding='utf-8') as f:
                     json.dump(lang_content, f, ensure_ascii=False, indent=4)
 
+
+def translate_from_key_mode():
+    i18n_folder_path = folder_path.get()
+    template_lang_code = template_lang.get()
+
+    # Fetch supported languages
+    google_api_key = simpledialog.askstring("Google API Key", "Enter Google Translate API Key:")
+    deepl_api_key = simpledialog.askstring("DeepL API Key", "Enter DeepL API Key:")
+    if not google_api_key or not deepl_api_key:
+        messagebox.showinfo("Cancelled", "Translation cancelled (API key not provided).")
+        return
+
+    google_supported_languages = get_google_supported_languages(google_api_key)
+    deepl_supported_languages = check_language_support(deepl_api_key)
+
+    # Load the template content
+    template_file_path = os.path.join(i18n_folder_path, f'{template_lang_code}.json')
+    template_content = read_json(template_file_path)
+    if template_content is None or not template_content:
+        messagebox.showerror("Error", "Empty or invalid template file.")
+        return
+
+    start_key = simpledialog.askstring("Start Key", "Enter the key to start translation from:")
+    if not start_key or start_key not in template_content:
+        messagebox.showinfo("Cancelled", "Invalid or missing start key.")
+        return
+
+    start_index = list(template_content.keys()).index(start_key)
+
+    # Filter files based on language support
+    for lang_file in os.listdir(i18n_folder_path):
+        lang_code = lang_file.split('.')[0]
+        if lang_file.endswith('.json') and lang_code != template_lang_code and (lang_code.lower() in google_supported_languages or lang_code.upper() in deepl_supported_languages):
+            lang_file_path = os.path.join(i18n_folder_path, lang_file)
+            lang_content = read_json(lang_file_path)
+            if not lang_content:
+                continue  # Skip empty files
+
+            for key in list(template_content.keys())[start_index:]:
+                text = template_content[key]
+                if len(text.split()) < 4 or lang_code.upper() not in deepl_supported_languages:
+                    translated_text = google_translate_text(google_api_key, text, lang_code)
+                else:
+                    translated_text = translate_text(deepl_api_key, google_api_key, text, lang_code)
+                if translated_text:
+                    lang_content[key] = translated_text
+
+            with open(lang_file_path, 'w', encoding='utf-8') as f:
+                json.dump(lang_content, f, ensure_ascii=False, indent=4)
+
+    messagebox.showinfo("Translation complete!", "The translation from the specified key is complete for all language files.")
+                    
 def confirm_translation():
     if special_logic_var.get() == 1:
         deepL_cleanup_mode()
+    elif start_from_key_var.get() == 1:
+        translate_from_key_mode()
     else:
         i18n_folder_path = folder_path.get()
         template_lang_code = template_lang.get()
@@ -179,11 +238,13 @@ root.title("i18n Translator")
 folder_path = StringVar()
 template_lang = StringVar()
 special_logic_var = IntVar()
+start_from_key_var = IntVar()
 
 Label(root, text="Template Language Code:").pack()
 Entry(root, textvariable=template_lang).pack()
 
 Checkbutton(root, text="Enable DeepL Cleanup Mode", variable=special_logic_var).pack()
+Checkbutton(root, text="Translate from Specific Key", variable=start_from_key_var).pack()
 
 Label(root, text="i18n Folder Path:").pack()
 Entry(root, textvariable=folder_path).pack()

@@ -3,5 +3,10 @@
     "bottom_container_home_text": "Beide",
     "bottom_container_map_text": "Burk",
     "bottom_container_settings_text": "Einstellungen",
-    "pant_instructions_step_1": "Entleeren und reinigen Sie das Produkt. Test."
+    "pant_instructions_step_1": "",
+    "test_key": "Hallo, mein Name ist Python!",
+    "test_key_2": "Testen Sie diese Logik!",
+    "test_key_3": "Hallo nochmal, das ist unglaublich!",
+    "test_key_4": "Warum sollte man Python nicht lieben!",
+    "test_key_5": "Dies ist der letzte Test!"
 }
